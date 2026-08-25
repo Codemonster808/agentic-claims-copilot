@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+pyspark>=4.0
+boto3
+pytest
+python-dotenv
+chromadb
+sentence-transformers
+pinecone
+openai
+pydantic

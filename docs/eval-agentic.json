@@ -1,0 +1,156 @@
+{
+  "mode": "agentic",
+  "n_claims": 10,
+  "n_answered": 10,
+  "citation_precision_at_k": 0.1667,
+  "avg_iterations": 2.7,
+  "results": [
+    {
+      "claim_id": "CLAIM-000",
+      "status": "answered",
+      "iterations": 3,
+      "predicted_citations": [
+        "POL-014-4.3",
+        "POL-015-6.5",
+        "POL-004-3.6"
+      ],
+      "ground_truth": [
+        "POL-006-6.3",
+        "POL-006-1.3"
+      ],
+      "precision": 0.0
+    },
+    {
+      "claim_id": "CLAIM-001",
+      "status": "answered",
+      "iterations": 3,
+      "predicted_citations": [
+        "POL-002-5.8",
+        "POL-019-1.8",
+        "POL-003-6.1"
+      ],
+      "ground_truth": [
+        "POL-005-2.7",
+        "POL-005-1.8"
+      ],
+      "precision": 0.0
+    },
+    {
+      "claim_id": "CLAIM-002",
+      "status": "answered",
+      "iterations": 3,
+      "predicted_citations": [
+        "POL-002-5.8",
+        "POL-007-5.6",
+        "POL-005-1.8"
+      ],
+      "ground_truth": [
+        "POL-005-1.8"
+      ],
+      "precision": 0.3333333333333333
+    },
+    {
+      "claim_id": "CLAIM-003",
+      "status": "answered",
+      "iterations": 2,
+      "predicted_citations": [
+        "POL-017-3.5",
+        "POL-000-3.1",
+        "POL-007-4.2"
+      ],
+      "ground_truth": [
+        "POL-019-4.2",
+        "POL-019-2.2"
+      ],
+      "precision": 0.0
+    },
+    {
+      "claim_id": "CLAIM-004",
+      "status": "answered",
+      "iterations": 3,
+      "predicted_citations": [
+        "POL-009-6.6",
+        "POL-007-3.8",
+        "POL-006-6.3"
+      ],
+      "ground_truth": [
+        "POL-009-6.6",
+        "POL-009-4.6"
+      ],
+      "precision": 0.3333333333333333
+    },
+    {
+      "claim_id": "CLAIM-005",
+      "status": "answered",
+      "iterations": 2,
+      "predicted_citations": [
+        "POL-009-3.4",
+        "POL-015-6.5",
+        "POL-002-6.7"
+      ],
+      "ground_truth": [
+        "POL-002-6.7",
+        "POL-002-3.5"
+      ],
+      "precision": 0.3333333333333333
+    },
+    {
+      "claim_id": "CLAIM-006",
+      "status": "answered",
+      "iterations": 3,
+      "predicted_citations": [
+        "POL-004-3.6",
+        "POL-015-6.5",
+        "POL-014-4.3"
+      ],
+      "ground_truth": [
+        "POL-018-6.5"
+      ],
+      "precision": 0.0
+    },
+    {
+      "claim_id": "CLAIM-007",
+      "status": "answered",
+      "iterations": 2,
+      "predicted_citations": [
+        "POL-009-5.2",
+        "POL-001-2.2",
+        "POL-006-4.9"
+      ],
+      "ground_truth": [
+        "POL-006-4.9",
+        "POL-006-2.7"
+      ],
+      "precision": 0.3333333333333333
+    },
+    {
+      "claim_id": "CLAIM-008",
+      "status": "answered",
+      "iterations": 3,
+      "predicted_citations": [
+        "POL-004-3.6",
+        "POL-015-6.5",
+        "POL-014-4.3"
+      ],
+      "ground_truth": [
+        "POL-004-3.6"
+      ],
+      "precision": 0.3333333333333333
+    },
+    {
+      "claim_id": "CLAIM-009",
+      "status": "answered",
+      "iterations": 3,
+      "predicted_citations": [
+        "POL-009-4.6",
+        "POL-006-5.8",
+        "POL-015-5.3"
+      ],
+      "ground_truth": [
+        "POL-002-1.7",
+        "POL-002-4.7"
+      ],
+      "precision": 0.0
+    }
+  ]
+}
