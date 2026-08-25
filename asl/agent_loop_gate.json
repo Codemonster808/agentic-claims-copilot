@@ -1,0 +1,40 @@
+{
+  "Comment": "Per-iteration budget gate for the agentic loop. Execution input must be {\"claim_id\": \"<id>\", \"token_budget\": N}. The driver (src/statemachine.py) calls this once per loop iteration BEFORE running Plan/Tool/Observe in Python; a budget-exhausted claim never reaches those steps.",
+  "StartAt": "CheckBudget",
+  "States": {
+    "CheckBudget": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:000000000000:function:claims-check-budget",
+      "Retry": [
+        {"ErrorEquals": ["States.ALL"], "MaxAttempts": 3, "IntervalSeconds": 1, "BackoffRate": 2.0}
+      ],
+      "Catch": [
+        {"ErrorEquals": ["States.ALL"], "ResultPath": "$.error", "Next": "GateCheckFailed"}
+      ],
+      "Next": "IsWithinBudget"
+    },
+    "IsWithinBudget": {
+      "Type": "Choice",
+      "Choices": [
+        {"Variable": "$.within_budget", "BooleanEquals": true, "Next": "AllowIteration"}
+      ],
+      "Default": "SendToDLQ"
+    },
+    "AllowIteration": {
+      "Type": "Succeed"
+    },
+    "SendToDLQ": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:000000000000:function:claims-send-to-dlq",
+      "ResultPath": "$.dlq_result",
+      "Retry": [
+        {"ErrorEquals": ["States.ALL"], "MaxAttempts": 3, "IntervalSeconds": 1, "BackoffRate": 2.0}
+      ],
+      "End": true
+    },
+    "GateCheckFailed": {
+      "Type": "Fail",
+      "Error": "BudgetGateCheckFailed"
+    }
+  }
+}

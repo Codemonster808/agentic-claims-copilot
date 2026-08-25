@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from agent_loop import _reciprocal_rank_fusion, _send_to_dlq, run_agentic_loop  # noqa: E402
+from agent_loop import _reciprocal_rank_fusion, run_agentic_loop  # noqa: E402
 from common import aws  # noqa: E402
 
 
@@ -39,14 +39,22 @@ def test_budget_exhaustion_sends_to_dlq_not_a_fabricated_answer():
 
 
 def test_budget_counter_is_atomic_not_read_modify_write():
-    """20 concurrent loop starts on the same claim_id must not under-count spend."""
+    """
+    20 concurrent Step Functions gate executions on the same claim_id
+    must not under-count spend — each execution's CheckBudget Lambda
+    does an atomic DynamoDB ADD, not a read-modify-write, so the max
+    tokens_spent seen across 20 concurrent gate calls (300 each) must be
+    exactly 6000, never less.
+    """
     import concurrent.futures
-    from agent_loop import _spend_budget
+
+    from statemachine import gate_iteration
 
     claim_id = f"test-atomic-{uuid.uuid4()}"
     with concurrent.futures.ThreadPoolExecutor(max_workers=20) as pool:
-        totals = list(pool.map(lambda _: _spend_budget(claim_id, 100), range(20)))
-    assert max(totals) == 2000, f"expected the counter to reach exactly 2000 after 20x100, got max={max(totals)}"
+        results = list(pool.map(lambda _: gate_iteration(claim_id, token_budget=100_000), range(20)))
+    max_spent = max(r["tokens_spent"] for r in results)
+    assert max_spent == 20 * 300, f"expected the counter to reach exactly {20*300}, got max={max_spent}"
 
 
 def test_reciprocal_rank_fusion_rewards_consistent_top_ranking():

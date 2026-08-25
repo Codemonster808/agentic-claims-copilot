@@ -1,0 +1,54 @@
+{
+  "pipeline": "agentic-claims-copilot",
+  "generated_at": "2026-08-25T16:42:46.284990+00:00",
+  "score": {
+    "completeness": 1.0,
+    "correctness": 1.0,
+    "validity": 1.0,
+    "consistency": 1.0,
+    "timeliness": 1.0,
+    "overall": 1.0
+  },
+  "checks": [
+    {
+      "dimension": "completeness",
+      "name": "every_claim_reaches_a_terminal_status",
+      "measured": 5,
+      "threshold": 5,
+      "passed": true,
+      "detail": "statuses: ['answered', 'answered', 'answered', 'answered', 'answered']"
+    },
+    {
+      "dimension": "correctness",
+      "name": "citations_reference_real_clause_ids",
+      "measured": 1.0,
+      "threshold": 1.0,
+      "passed": true,
+      "detail": "citations come directly from RRF-fused retrieval results, never fabricated by the LLM"
+    },
+    {
+      "dimension": "validity",
+      "name": "budget_exhaustion_reaches_real_dlq_via_step_functions",
+      "measured": 1.0,
+      "threshold": 1.0,
+      "passed": true,
+      "detail": "exhausted_result=budget_exhausted, found_in_dlq=True"
+    },
+    {
+      "dimension": "consistency",
+      "name": "incremental_reindex_skips_unchanged_docs",
+      "measured": 0,
+      "threshold": 0,
+      "passed": true,
+      "detail": "second reindex run on unchanged docs re-embedded 0 (must be 0)"
+    },
+    {
+      "dimension": "timeliness",
+      "name": "loop_terminates_within_max_iterations",
+      "measured": 1.0,
+      "threshold": 1.0,
+      "passed": true,
+      "detail": "every claim reached a terminal status without hanging (enforced by MAX_ITERATIONS + SF budget gate)"
+    }
+  ]
+}

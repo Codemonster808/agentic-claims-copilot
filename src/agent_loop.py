@@ -1,9 +1,19 @@
 #!/usr/bin/env python3
 """
 The agentic retrieval loop: Plan -> Tool -> Observe -> Choice, with a hard
-token budget enforced via a DynamoDB atomic counter (UpdateItem/ADD — not
-read-modify-write, since each loop iteration could in principle run as a
-separate Lambda invocation with no shared memory).
+token budget gated by a real Step Functions state machine
+(asl/agent_loop_gate.json) called once per iteration — Choice routes to
+either "keep going" or a Lambda that sends the claim to the DLQ, with
+Retry/Catch around the DynamoDB call. The budget counter itself is an
+atomic DynamoDB counter (UpdateItem/ADD, inside the gate's Lambda) —
+never read-modify-write, since each gate call is a separate Lambda
+invocation with no shared memory.
+
+Step Functions here orchestrates the control flow (budget/DLQ decision),
+not the ML calls — the same reasoning as
+fintech-txn-integrity-pipeline's Spark-outside-Lambda pattern: Plan/Tool
+Observe/Answer stay in Python because an embedding model and an LLM
+client don't fit in a bare Lambda runtime.
 
 Design choice: evidence from every iteration's query is combined via
 reciprocal rank fusion (RRF), not by comparing raw embedding distances
@@ -24,13 +34,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import aws  # noqa: E402
 from common.llm import get_provider  # noqa: E402
 from common.vectors import get_vector_store  # noqa: E402
+from statemachine import gate_iteration  # noqa: E402
 
-BUDGET_TABLE = "claims-token-budget"
 ANSWERS_TABLE = "claims-answers"
-DLQ_NAME = "claims-agent-dlq"
 
 DEFAULT_TOKEN_BUDGET = 2000
-COST_PER_ITERATION = 300  # rough accounting unit charged per loop iteration
 MAX_ITERATIONS = 3
 
 
@@ -39,26 +47,6 @@ def _embed(text: str) -> list[float]:
     model = _embed._model if hasattr(_embed, "_model") else SentenceTransformer("all-MiniLM-L6-v2")
     _embed._model = model
     return model.encode([text])[0].tolist()
-
-
-def _spend_budget(claim_id: str, amount: int) -> int:
-    """Atomically increments spend for a claim; returns the new total."""
-    ddb = aws.client("dynamodb")
-    resp = ddb.update_item(
-        TableName=BUDGET_TABLE,
-        Key={"claim_id": {"S": claim_id}},
-        UpdateExpression="ADD tokens_spent :inc",
-        ExpressionAttributeValues={":inc": {"N": str(amount)}},
-        ReturnValues="UPDATED_NEW",
-    )
-    return int(resp["Attributes"]["tokens_spent"]["N"])
-
-
-def _send_to_dlq(claim_id: str, reason: str) -> None:
-    sqs = aws.client("sqs")
-    queue_url = sqs.get_queue_url(QueueName=DLQ_NAME)["QueueUrl"]
-    import json
-    sqs.send_message(QueueUrl=queue_url, MessageBody=json.dumps({"claim_id": claim_id, "reason": reason}))
 
 
 def plan_query(llm, question: str, prior_queries: list[str]) -> str:
@@ -126,10 +114,10 @@ def run_agentic_loop(claim_id: str, question: str, token_budget: int = DEFAULT_T
     best_top1_distance = float("inf")
 
     for iteration in range(1, MAX_ITERATIONS + 1):
-        spent = _spend_budget(claim_id, COST_PER_ITERATION)
-        if spent > token_budget:
-            _send_to_dlq(claim_id, f"token budget exceeded ({spent} > {token_budget})")
-            return {"status": "budget_exhausted", "iterations": iteration, "trace": trace}
+        gate = gate_iteration(claim_id, token_budget)
+        if not gate["within_budget"]:
+            return {"status": "budget_exhausted", "iterations": iteration, "trace": trace,
+                     "tokens_spent": gate["tokens_spent"]}
 
         query = plan_query(llm, question, prior_queries)
         prior_queries.append(query)
