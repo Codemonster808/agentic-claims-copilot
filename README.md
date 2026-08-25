@@ -74,6 +74,7 @@ Both precision numbers are modest in absolute terms (0.13–0.17, not 0.8+). Tha
 |---|---|---|---|
 | S3 / Lambda / SQS / DynamoDB | [MiniStack](https://ministack.org) (free, MIT, no account) | AWS | High |
 | Step Functions | MiniStack (full ASL interpreter) | AWS | Medium-High |
+| AWS CLI v2 | Real `aws` CLI against MiniStack (`AWS_ENDPOINT_URL`) — see `docs/RUNBOOK.md` §2 | AWS CLI v2 | High |
 | Vector store | Chroma (`VECTOR_BACKEND=chroma`) or real Pinecone (`=pinecone`) | Pinecone | High — same retrieval interface, both exercised in tests |
 | LLM | Deterministic fake (`LLM_PROVIDER=fake`) for `make demo`/CI, real [MiniMax M3](https://minimax-ai.chat/docs/api/) (`=minimax`, OpenAI-compatible) for `make eval` | MiniMax M3 or equivalent | Eval metrics in the README are generated with the real provider, not the fake one |
 
@@ -86,10 +87,15 @@ Both precision numbers are modest in absolute terms (0.13–0.17, not 0.8+). Tha
 ## Demo (3 minutes)
 
 ```bash
-make demo          # bootstrap MiniStack, generate 20 policies + 10 claims, index into Chroma
+source env.sh
+make demo          # bootstrap MiniStack, 20 policies + 10 claims, index into Chroma
 make eval          # LLM_PROVIDER=fake by default (free); export LLM_PROVIDER=minimax for real numbers
-cat docs/eval-agentic.json   # full trace: every query tried per claim, RRF-fused citations, iteration count
+cat docs/eval-agentic.json
 ```
+
+## Learn by running
+
+See [`docs/RUNBOOK.md`](docs/RUNBOOK.md). Build from scratch: [`docs/BUILD_GUIDE.md`](docs/BUILD_GUIDE.md).
 
 ## What this is NOT
 
@@ -97,4 +103,4 @@ Not "chat with your PDF." Without the loop, the budget, the eval harness, and th
 
 ## Build it yourself
 
-See [`docs/BUILD_GUIDE.md`](docs/BUILD_GUIDE.md).
+See [`docs/RUNBOOK.md`](docs/RUNBOOK.md) to run the flow, or [`docs/BUILD_GUIDE.md`](docs/BUILD_GUIDE.md) to build from scratch.

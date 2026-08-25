@@ -1,0 +1,6 @@
+{
+  "buckets": ["claims-docs", "claims-traces"],
+  "queues": ["claims-agent-dlq"],
+  "tables": ["claims-answers", "claims-token-budget"],
+  "functions": ["claims-check-budget", "claims-send-to-dlq"]
+}
