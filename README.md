@@ -83,6 +83,7 @@ Both precision numbers are modest in absolute terms (0.13–0.17, not 0.8+). Tha
 1. **Token budget enforcement inside a distributed state machine** — a counter in DynamoDB, not in a single process's memory, since each loop step is its own Lambda invocation.
 2. **Evaluation harness with a golden set** — 50 questions with correct clauses labeled, scored for citation precision@k and answer groundedness. This is what turns the repo into authority instead of a demo.
 3. **A loop that doesn't diverge** — backoff, repeated-query detection, a hard cutoff. An agent that retries indefinitely is a cost bug, not a feature.
+4. **Permanent vs. transient failure classification on the LLM call itself** — not every failure deserves a retry. A malformed/rejected request (`PermanentLLMError`) goes straight to the DLQ; a timeout-shaped error (`TransientLLMError`) gets bounded retries with exponential backoff first. `LLM_PROVIDER=fake-flaky` simulates both deterministically — see `docs/RUNBOOK.md`.
 
 ## Demo (3 minutes)
 

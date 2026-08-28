@@ -1,6 +1,6 @@
 # Quality report — agentic-claims-copilot
 
-Generated: 2026-08-25T16:42:46.284990+00:00
+Generated: 2026-08-28T20:56:58.201317+00:00
 
 **Overall score: 100%** (5/5 checks passed)
 

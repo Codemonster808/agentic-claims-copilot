@@ -11,4 +11,7 @@ def get_provider() -> LLMProvider:
     if backend == "minimax":
         from .minimax import MiniMaxLLMProvider
         return MiniMaxLLMProvider()
-    raise ValueError(f"Unknown LLM_PROVIDER: {backend!r} (expected 'fake' or 'minimax')")
+    if backend == "fake-flaky":
+        from .flaky import FlakyLLMProvider
+        return FlakyLLMProvider()
+    raise ValueError(f"Unknown LLM_PROVIDER: {backend!r} (expected 'fake', 'minimax', or 'fake-flaky')")

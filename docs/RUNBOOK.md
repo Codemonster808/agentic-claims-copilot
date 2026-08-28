@@ -115,6 +115,33 @@ python3 scripts/aws_inspect.py ddb
 
 **Esperado:** `status=budget_exhausted`, **sin** `citations` fabricadas, mensaje en `claims-agent-dlq`. Step Functions tomó el branch Choice → SendToDLQ (`ResultPath: $.dlq_result` para no pisar `tokens_spent`).
 
+### Fallo permanente vs. transitorio en la llamada al LLM
+
+`budget_exhausted` es el único camino al DLQ que existía hasta ahora — un límite de negocio, no un fallo real de la llamada al LLM (que hoy no tenía ningún try/except: un timeout real habría tumbado el proceso entero). `LLM_PROVIDER=fake-flaky` simula ambos casos sin depender de una red real:
+
+```bash
+# Transitorio: falla una vez, reintenta con backoff, termina answered
+LLM_PROVIDER=fake-flaky FLAKY_FAILURE_MODE=transient-once python3 - <<'PY'
+import uuid, sys
+sys.path.insert(0, "src")
+from agent_loop import run_agentic_loop
+cid = f"flaky-transient-{uuid.uuid4().hex[:8]}"
+print(run_agentic_loop(cid, "Is water damage covered?", token_budget=2000))
+PY
+
+# Permanente: va directo al DLQ, sin reintentar
+LLM_PROVIDER=fake-flaky FLAKY_FAILURE_MODE=permanent python3 - <<'PY'
+import uuid, sys
+sys.path.insert(0, "src")
+from agent_loop import run_agentic_loop
+cid = f"flaky-permanent-{uuid.uuid4().hex[:8]}"
+print(run_agentic_loop(cid, "Is water damage covered?", token_budget=2000))
+PY
+python3 scripts/aws_inspect.py sqs
+```
+
+**Esperado:** el caso `transient-once` termina `status=answered` (el segundo intento, tras el backoff, sí responde). El caso `permanent` termina `status=failed, failure_type=permanent`, con un mensaje en `claims-agent-dlq` que trae `failure_type` — un campo que los mensajes de `budget_exhausted` no tienen, así que `aws sqs receive-message` sobre la DLQ te deja distinguir los dos motivos sin adivinar.
+
 ---
 
 ## 4. Errores
@@ -126,6 +153,7 @@ python3 scripts/aws_inspect.py ddb
 | Budget exhausted en el primer claim “bueno” | Reusaste el mismo `claim_id`. Siempre uuid nuevo |
 | Precision peor con el loop | Estarías fusionando por distancia cross-query. El código ya usa RRF |
 | `tokens_spent` falso | Bug viejo de ResultPath en la tarea DLQ — ya corregido |
+| `Unknown LLM_PROVIDER: 'fake-flaky'` | Repo desactualizado — `fake-flaky` se agregó junto con la clasificación de fallos permanente/transitorio |
 
 ---
 
