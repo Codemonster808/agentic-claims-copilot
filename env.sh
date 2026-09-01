@@ -38,7 +38,11 @@ _env_load "$_REPO_ROOT/.env"
 _env_load "$HOME/.config/de-portfolio/.env"
 
 # Belt-and-suspenders so a half-written .env still works.
-export AWS_ENDPOINT_URL="${AWS_ENDPOINT_URL:-http://localhost:4566}"
+export AWS_ENDPOINT_URL="${AWS_ENDPOINT_URL:-http://localhost:4582}"
+if [[ "${AWS_ENDPOINT_URL}" =~ :([0-9]+) ]]; then
+  export MINISTACK_PORT="${MINISTACK_PORT:-${BASH_REMATCH[1]}}"
+fi
+export MINISTACK_PORT="${MINISTACK_PORT:-4566}"
 export AWS_REGION="${AWS_REGION:-us-east-1}"
 export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-test}"
 export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-test}"
@@ -58,6 +62,7 @@ fi
 if [[ $_ENV_QUIET -eq 0 ]]; then
   echo "=== env.sh  ($_REPO_ROOT) ==="
   echo "  AWS_ENDPOINT_URL      = $AWS_ENDPOINT_URL"
+  echo "  MINISTACK_PORT        = $MINISTACK_PORT"
   echo "  AWS_REGION            = $AWS_REGION"
   echo "  AWS_ACCESS_KEY_ID     = $AWS_ACCESS_KEY_ID"
   echo "  LLM_PROVIDER          = $LLM_PROVIDER"

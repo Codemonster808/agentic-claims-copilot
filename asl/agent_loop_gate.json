@@ -1,5 +1,5 @@
 {
-  "Comment": "Per-iteration budget gate for the agentic loop. Execution input must be {\"claim_id\": \"<id>\", \"token_budget\": N}. The driver (src/statemachine.py) calls this once per loop iteration BEFORE running Plan/Tool/Observe in Python; a budget-exhausted claim never reaches those steps.",
+  "Comment": "Per-iteration budget gate for the agentic loop. Execution input must be {\"claim_id\": \"<id>\", \"token_budget\": N}. The driver (src/orchestration/statemachine.py) calls this once per loop iteration BEFORE running Plan/Tool/Observe in Python; a budget-exhausted claim never reaches those steps.",
   "StartAt": "CheckBudget",
   "States": {
     "CheckBudget": {

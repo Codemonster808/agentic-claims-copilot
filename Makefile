@@ -10,26 +10,26 @@ inspect:
 	$(ENV) && python3 scripts/aws_inspect.py all
 
 deploy-gate:
-	$(ENV) && python3 src/statemachine.py
+	$(ENV) && python3 src/orchestration/statemachine.py
 
 demo: deploy-gate
 	$(ENV) && docker compose up -d
 	$(ENV) && python3 scripts/bootstrap.py
-	$(ENV) && python3 src/data_gen.py --policies 20 --claims 10 --out data
-	$(ENV) && python3 src/ingest.py --in data/policies
-	$(ENV) && VECTOR_BACKEND=chroma python3 src/index_docs.py --in data
+	$(ENV) && python3 src/ingestion/data_gen.py --policies 20 --claims 10 --out data
+	$(ENV) && python3 src/ingestion/ingest.py --in data/policies
+	$(ENV) && VECTOR_BACKEND=chroma python3 src/ingestion/index_docs.py --in data
 
 demo-full: demo
 
 test:
-	$(ENV) && LLM_PROVIDER=fake VECTOR_BACKEND=chroma pytest tests/ -v --ignore=tests/test_e2e.py
+	$(ENV) && LLM_PROVIDER=fake VECTOR_BACKEND=chroma pytest tests/ features/ -v --ignore=tests/data_quality
 
 e2e:
-	$(ENV) && LLM_PROVIDER=fake VECTOR_BACKEND=chroma pytest tests/test_e2e.py -v -s
+	$(ENV) && LLM_PROVIDER=fake VECTOR_BACKEND=chroma pytest tests/data_quality -v -s
 
 eval:
-	$(ENV) && VECTOR_BACKEND=chroma python3 src/eval.py --mode single-shot
-	$(ENV) && VECTOR_BACKEND=chroma python3 src/eval.py --mode agentic
+	$(ENV) && VECTOR_BACKEND=chroma python3 scripts/eval.py --mode single-shot
+	$(ENV) && VECTOR_BACKEND=chroma python3 scripts/eval.py --mode agentic
 
 reindex:
-	$(ENV) && VECTOR_BACKEND=chroma python3 src/reindex.py --policies-dir data
+	$(ENV) && VECTOR_BACKEND=chroma python3 src/transformation/reindex.py --policies-dir data

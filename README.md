@@ -1,5 +1,9 @@
 # agentic-claims-copilot
 
+[![CI](https://github.com/Codemonster808/agentic-claims-copilot/actions/workflows/ci.yml/badge.svg)](https://github.com/Codemonster808/agentic-claims-copilot/actions/workflows/ci.yml)
+[![Coverage >= 25%](https://img.shields.io/badge/coverage-%E2%89%A525%25-brightgreen)](https://github.com/Codemonster808/agentic-claims-copilot/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 An agentic retrieval loop for insurance/fintech claims — plan, retrieve, observe, retry, under a hard token budget — orchestrated with Step Functions.
 
 ## Pitch Card
@@ -51,10 +55,10 @@ Deliberate. Adding a JVM or Go worker just to "cover the language" would be the 
 
 | Metric | Single-shot | Agentic (RRF) | How it's measured |
 |---|---|---|---|
-| Citation precision@3 | 0.133 | **0.167** | `python3 src/eval.py --mode {single-shot,agentic}` with `LLM_PROVIDER=minimax` |
+| Citation precision@3 | 0.133 | **0.167** | `python3 scripts/eval.py --mode {single-shot,agentic}` with `LLM_PROVIDER=minimax` |
 | Recall (≥1 correct citation) | 4/10 | **5/10** | same eval run |
 | Avg iterations per claim | 1.0 | 2.7 | same eval run |
-| Budget-exhaustion → DLQ, concurrent counter correctness | — | **verified**: 20 concurrent budget increments sum to exactly 2000, no lost updates | `pytest tests/test_agent_loop.py::test_budget_counter_is_atomic_not_read_modify_write` |
+| Budget-exhaustion → DLQ, concurrent counter correctness | — | **verified**: 20 concurrent budget increments (300 tokens each) sum to exactly 6000, no lost updates | `pytest tests/integration/test_agent_loop.py::test_budget_counter_is_atomic_not_read_modify_write` |
 
 > Real numbers from a 10-claim golden set with real MiniMax M3 calls, not the fake provider — see the "what actually happened" section above for how these numbers came to be this specific and why an earlier design scored *worse* than the baseline.
 

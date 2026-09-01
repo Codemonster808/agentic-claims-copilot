@@ -9,7 +9,7 @@
 
 ## Baseline measurement (real numbers, not projected)
 
-Single-shot baseline: `python3 src/eval.py --mode single-shot` with `LLM_PROVIDER=minimax`, over the 10-claim golden set in `data/claims.json` (ground truth clause IDs embedded at generation time by `src/data_gen.py`). Result: citation precision@3 = 0.133, recall = 4/10.
+Single-shot baseline: `python3 scripts/eval.py --mode single-shot` with `LLM_PROVIDER=minimax`, over the 10-claim golden set in `data/claims.json` (ground truth clause IDs embedded at generation time by `src/ingestion/data_gen.py`). Result: citation precision@3 = 0.133, recall = 4/10.
 
 Agentic (RRF-fused): same command with `--mode agentic`. Result: precision@3 = 0.167, recall = 5/10, avg 2.7 iterations/claim.
 

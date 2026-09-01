@@ -32,7 +32,7 @@ make check-env
 Write 20 synthetic insurance policy documents (plain text, a few paragraphs each, with clearly identifiable clauses like "Clause 4.2: water damage exclusion"). Write 10 synthetic claims, each referencing 1-2 real clauses and 1-2 unrelated distractor topics.
 
 ```bash
-python3 src/data_gen.py --policies 20 --claims 10 --out data/
+python3 src/ingestion/data_gen.py --policies 20 --claims 10 --out data/
 make check-data   # "OK: 20 policies, 10 claims, all claims reference at least 1 real clause"
 ```
 
@@ -57,7 +57,7 @@ make check-eval-set   # "OK: 10/10 claims labeled with >=1 clause each"
 Before building the loop, measure the single-shot approach (one retrieval, one answer, no retry) against the golden set. This produces the 0.53-style baseline number.
 
 ```bash
-python3 src/eval.py --mode single-shot
+python3 scripts/eval.py --mode single-shot
 pytest tests/test_baseline.py
 ```
 

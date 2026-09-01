@@ -14,7 +14,7 @@ source env.sh
 docker compose up -d
 make check-env
 python3 scripts/bootstrap.py
-python3 src/statemachine.py     # Lambdas + ASL budget/DLQ
+python3 src/orchestration/statemachine.py     # Lambdas + ASL budget/DLQ
 python3 scripts/aws_inspect.py sfn  # debe listar claims-agent-loop-gate
 ```
 
@@ -25,11 +25,11 @@ python3 scripts/aws_inspect.py sfn  # debe listar claims-agent-loop-gate
 ### 1.1 Pólizas, claims, índice
 
 ```bash
-python3 src/data_gen.py --policies 20 --claims 10 --out data --seed 42
+python3 src/ingestion/data_gen.py --policies 20 --claims 10 --out data --seed 42
 ls data/policies | head
-python3 src/ingest.py --in data/policies
+python3 src/ingestion/ingest.py --in data/policies
 python3 scripts/aws_inspect.py s3          # claims-docs
-VECTOR_BACKEND=chroma python3 src/index_docs.py --in data
+VECTOR_BACKEND=chroma python3 src/ingestion/index_docs.py --in data
 ```
 
 Cada claim en `data/claims.json` trae las cláusulas-gold. Citation precision se mide contra eso.
@@ -58,8 +58,8 @@ Si el campo no se llama `question`, abre `data/claims.json` y usa la clave real 
 ### 1.3 Single-shot vs agentic (eval)
 
 ```bash
-VECTOR_BACKEND=chroma LLM_PROVIDER=fake python3 src/eval.py --mode single-shot
-VECTOR_BACKEND=chroma LLM_PROVIDER=fake python3 src/eval.py --mode agentic
+VECTOR_BACKEND=chroma LLM_PROVIDER=fake python3 scripts/eval.py --mode single-shot
+VECTOR_BACKEND=chroma LLM_PROVIDER=fake python3 scripts/eval.py --mode agentic
 ```
 
 El loop **no** fusiona por distancia cruda entre queries (eso empeoró precision). Usa **RRF**. Fake LLM no va a replicar el 0.133→0.167 de MiniMax; el mecanismo sí.

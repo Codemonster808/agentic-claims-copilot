@@ -1,0 +1,30 @@
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = [".venv", "data", "benchmarks"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.format]
+
+[tool.mypy]
+python_version = "3.12"
+# pyspark/boto3/chromadb/pinecone don't ship type stubs — ignore missing
+# imports globally rather than maintaining a stub allowlist by hand.
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["models.*", "utils.*"]
+disallow_untyped_defs = true
+
+[tool.coverage.run]
+source = ["src"]
+
+[tool.coverage.report]
+fail_under = 25
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+]

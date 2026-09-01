@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Idempotent creation of the AWS resources this repo needs, against MiniStack."""
+
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from common import aws  # noqa: E402
+from utils import aws  # noqa: E402
 
 BUCKETS = ["claims-docs", "claims-traces"]
 DLQ_NAME = "claims-agent-dlq"
