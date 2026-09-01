@@ -60,7 +60,7 @@ narwhals==2.25.0
 networkx==3.6.1
 numpy==2.5.2
 nvidia-cublas==13.1.1.3
-nvidia-cuda-cupti==13.0.85
+nvidia-cuda-cupti==13.3.75
 nvidia-cuda-nvrtc==13.0.88
 nvidia-cuda-runtime==13.0.96
 nvidia-cudnn-cu13==9.20.0.48
