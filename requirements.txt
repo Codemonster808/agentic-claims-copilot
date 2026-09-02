@@ -280,6 +280,8 @@ protobuf==7.36.0
     #   googleapis-common-protos
     #   onnxruntime
     #   opentelemetry-proto
+py4j==0.10.9.9
+    # via pyspark
 pybase64==1.5.0
     # via chromadb
 pydantic==2.13.4
@@ -301,6 +303,8 @@ pypika==0.51.1
     # via chromadb
 pyproject-hooks==1.2.0
     # via build
+pyspark==4.2.0
+    # via -r requirements.in
 pytest==9.1.1
     # via
     #   -r requirements.in

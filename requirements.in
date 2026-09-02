@@ -9,6 +9,7 @@ fastapi
 openai
 pinecone
 pydantic
+pyspark
 pytest
 pytest-bdd
 pytest-cov
