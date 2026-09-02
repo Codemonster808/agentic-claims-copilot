@@ -21,21 +21,57 @@ An agentic retrieval loop for insurance/fintech claims — plan, retrieve, obser
 ## Architecture
 
 ```
-synthetic policy docs + claim intake → S3
-  → src/ingestion/index_docs.py: chunk + embed (sentence-transformers) → Pinecone (flag: Chroma local)
-  → src/orchestration/statemachine.py drives the loop, calling into
-    src/models/agent_loop.py (Plan / Tool / Observe stay in Python —
-    embedding models don't fit a bare Lambda runtime) between real
-    Step Functions gate calls:
-       Plan    (propose retrieval query from claim)
-       Tool    (query vector store, top-k)
-       Observe (score evidence sufficiency)
-       Gate    (Lambda: src/orchestration/lambdas/check_budget.py — atomic token-spend check)
-       Choice  → sufficient? emit answer+citations : retry (until budget)
-       budget exhausted → Lambda: src/orchestration/lambdas/send_to_dlq.py → SQS DLQ
-  → answers + traces → DynamoDB
-  → nightly src/transformation/reindex.py (PySpark): re-embed changed docs, archive traces → S3 Parquet
-  → src/serving/api.py :: FastAPI: /ask, /trace/{id}, /eval/report
+  synthetic policy docs + claim intake
+             |
+             v
+      S3 (claims-docs)
+             |
+             v
+  src/ingestion/index_docs.py
+    chunk + embed (sentence-transformers)
+             |
+             v
+      Pinecone / Chroma (vector store)
+             |
+             v
+  src/orchestration/statemachine.py drives the loop below, calling into
+  src/models/agent_loop.py for each step (Plan/Tool/Observe run in Python —
+  an embedding-model call doesn't fit a bare Lambda runtime):
+             |
+             v
+       +-----------+
+   +-->|   Plan     |  propose retrieval query from claim
+   |   +-----+-----+
+   |         v
+   |   +-----------+
+   |   |   Tool     |  query vector store, top-k
+   |   +-----+-----+
+   |         v
+   |   +-----------+
+   |   |  Observe   |  score evidence sufficiency
+   |   +-----+-----+
+   |         v
+   |   Gate (Lambda): src/orchestration/lambdas/check_budget.py
+   |     atomic DynamoDB token-spend check
+   |         |
+   |     +---+--------------------+
+   |     v                        v
+   |  sufficient              insufficient
+   |     |                        |
+   |     v                   budget left?
+   |  emit answer               /    \
+   |  + citations              yes    no
+   |     |                      |      \
+   |     v                      |       v
+   |  DynamoDB                  |    Lambda: send_to_dlq.py --> SQS DLQ
+   |  (answers + traces)        |
+   +-----------------------------+
+
+  nightly src/transformation/reindex.py (PySpark)
+    re-embeds only changed docs, archives traces --> S3 Parquet
+             |
+             v
+  src/serving/api.py :: FastAPI --> /ask  /trace/{id}  /eval/report
 ```
 
 See `docs/architecture.md` for the diagram.
