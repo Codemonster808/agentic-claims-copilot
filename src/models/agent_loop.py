@@ -30,11 +30,14 @@ to reformulate the query on a retry, once to generate the final answer.
 import json
 import sys
 import time
+from functools import lru_cache
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from models.llm import get_provider  # noqa: E402
+from models.llm.base import LLMClient  # noqa: E402
 from models.llm.errors import PermanentLLMError, TransientLLMError  # noqa: E402
 from orchestration.statemachine import gate_iteration  # noqa: E402
 from utils import aws  # noqa: E402
@@ -76,7 +79,7 @@ def _send_to_dlq(claim_id: str, failure_type: str, detail: str) -> None:
     )
 
 
-def _call_llm_with_retry(llm, prompt: str, max_tokens: int, claim_id: str) -> str:
+def _call_llm_with_retry(llm: LLMClient, prompt: str, max_tokens: int, claim_id: str) -> str:
     backoff = TRANSIENT_BACKOFF_BASE_S
     for attempt in range(1, MAX_TRANSIENT_ATTEMPTS + 1):
         try:
@@ -93,15 +96,24 @@ def _call_llm_with_retry(llm, prompt: str, max_tokens: int, claim_id: str) -> st
     raise AssertionError("unreachable")  # loop always returns or raises
 
 
-def _embed(text: str) -> list[float]:
+@lru_cache(maxsize=1)
+def _embedding_model() -> Any:
+    """Loading all-MiniLM-L6-v2 takes seconds and hundreds of MB, so it is
+    loaded once per process. lru_cache holds the instance in a real cache
+    instead of an attribute hung on the function object, which no type
+    checker can verify and which a refactor to functools.partial (or any
+    wrapper) would silently turn back into a reload-per-call."""
     from sentence_transformers import SentenceTransformer
 
-    model = _embed._model if hasattr(_embed, "_model") else SentenceTransformer("all-MiniLM-L6-v2")
-    _embed._model = model
-    return model.encode([text])[0].tolist()
+    return SentenceTransformer("all-MiniLM-L6-v2")
 
 
-def plan_query(llm, question: str, prior_queries: list[str], claim_id: str) -> str:
+def _embed(text: str) -> list[float]:
+    embedding: list[float] = _embedding_model().encode([text])[0].tolist()
+    return embedding
+
+
+def plan_query(llm: LLMClient, question: str, prior_queries: list[str], claim_id: str) -> str:
     """
     On the first iteration, search with the claim as written. On retries,
     ask the LLM to bridge the vocabulary gap between how a claimant
@@ -125,7 +137,7 @@ def plan_query(llm, question: str, prior_queries: list[str], claim_id: str) -> s
     return rewritten or question
 
 
-def generate_answer(llm, question: str, retrieved: list[dict], claim_id: str) -> dict:
+def generate_answer(llm: LLMClient, question: str, retrieved: list[dict], claim_id: str) -> dict:
     citations = [r["metadata"]["clause_id"] for r in retrieved]
     context = "\n".join(
         f"[{r['metadata']['clause_id']}] {r['metadata']['title']}" for r in retrieved
@@ -166,7 +178,7 @@ def run_agentic_loop(
 
     prior_queries: list[str] = []
     all_ranked_lists: list[list[dict]] = []
-    trace = []
+    trace: list[dict] = []
     best_top1_distance = float("inf")
 
     try:

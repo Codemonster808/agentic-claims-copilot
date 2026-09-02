@@ -33,6 +33,30 @@ def _save_manifest(s3, manifest: dict) -> None:
     s3.put_object(Bucket=DOCS_BUCKET, Key=MANIFEST_KEY, Body=json.dumps(manifest).encode())
 
 
+def policy_content_digest(policy: dict) -> str:
+    """SHA-256 of the canonical JSON form — key order must not trigger a
+    false re-embed. Spec: docs/specs/spec-incremental-reindex.md."""
+    return hashlib.sha256(json.dumps(policy, sort_keys=True).encode()).hexdigest()
+
+
+def policies_needing_reembed(
+    policies: list[dict], manifest: dict[str, str]
+) -> tuple[list[dict], dict[str, str]]:
+    """Diff local policies against the last-run manifest.
+
+    A missing manifest (first run) is an empty dict, so every policy is
+    'changed'. Unchanged content hashes skip the embedding model entirely.
+    """
+    new_manifest: dict[str, str] = {}
+    changed: list[dict] = []
+    for policy in policies:
+        digest = policy_content_digest(policy)
+        new_manifest[policy["policy_id"]] = digest
+        if manifest.get(policy["policy_id"]) != digest:
+            changed.append(policy)
+    return changed, new_manifest
+
+
 def reindex_changed_docs(policies_dir: str) -> dict:
     """Compares each local policy file's content hash to the manifest —
     only files that changed (or are new) get re-embedded."""
@@ -45,15 +69,7 @@ def reindex_changed_docs(policies_dir: str) -> dict:
     s3 = aws.client("s3")
     manifest = _load_manifest(s3)
     policies = json.loads((Path(policies_dir) / "_policy_clauses.json").read_text())
-
-    changed = []
-    new_manifest = {}
-    for policy in policies:
-        content = json.dumps(policy, sort_keys=True)
-        digest = hashlib.sha256(content.encode()).hexdigest()
-        new_manifest[policy["policy_id"]] = digest
-        if manifest.get(policy["policy_id"]) != digest:
-            changed.append(policy)
+    changed, new_manifest = policies_needing_reembed(policies, manifest)
 
     if changed:
         from sentence_transformers import SentenceTransformer
@@ -97,7 +113,7 @@ def archive_traces() -> dict:
     if not items:
         return {"traces_archived": 0}
 
-    endpoint = os.environ.get("AWS_ENDPOINT_URL", "http://localhost:4566")
+    endpoint = os.environ.get("AWS_ENDPOINT_URL", "http://localhost:4582")
     spark = (
         SparkSession.builder.appName("archive-traces")
         .master("local[2]")

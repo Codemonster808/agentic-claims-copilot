@@ -41,7 +41,9 @@ def claim_in_dlq(claim_id):
     # poll a few times rather than asserting on a single receive.
     found = False
     for _ in range(5):
-        messages = sqs.receive_message(QueueUrl=queue_url, MaxNumberOfMessages=10, WaitTimeSeconds=1).get("Messages", [])
+        messages = sqs.receive_message(
+            QueueUrl=queue_url, MaxNumberOfMessages=10, WaitTimeSeconds=1
+        ).get("Messages", [])
         if any(claim_id in m["Body"] for m in messages):
             found = True
             break
@@ -53,17 +55,23 @@ def fresh_claim_id():
     return f"test-atomic-{uuid.uuid4()}"
 
 
-@when("the budget gate is called 20 times concurrently for that claim", target_fixture="gate_results")
+@when(
+    "the budget gate is called 20 times concurrently for that claim", target_fixture="gate_results"
+)
 def call_gate_concurrently(fresh_claim_id):
     import concurrent.futures
 
     from orchestration.statemachine import gate_iteration
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=20) as pool:
-        return list(pool.map(lambda _: gate_iteration(fresh_claim_id, token_budget=100_000), range(20)))
+        return list(
+            pool.map(lambda _: gate_iteration(fresh_claim_id, token_budget=100_000), range(20))
+        )
 
 
 @then("tokens_spent reaches exactly 6000")
 def tokens_spent_is_6000(gate_results):
     max_spent = max(r["tokens_spent"] for r in gate_results)
-    assert max_spent == 20 * 300, f"expected the counter to reach exactly {20*300}, got max={max_spent}"
+    assert (
+        max_spent == 20 * 300
+    ), f"expected the counter to reach exactly {20 * 300}, got max={max_spent}"

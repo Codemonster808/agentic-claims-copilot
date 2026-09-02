@@ -16,63 +16,88 @@ TOPICS = [
     (
         "water_damage",
         "Water Damage Exclusion",
-        "Losses caused by flooding, sewer backup, or gradual water seepage are excluded from coverage, "
-        "except where the policyholder has purchased the separate Flood Rider, in which case losses up to "
-        "${amount} are covered.",
+        (
+            "Losses caused by flooding, sewer backup, or gradual water seepage "
+            "are excluded from coverage, except where the policyholder has "
+            "purchased the separate Flood Rider, in which case losses up to "
+            "${amount} are covered."
+        ),
     ),
     (
         "theft",
         "Theft Coverage",
-        "Theft of insured property is covered up to the policy limit, provided a police report is filed "
-        "within {hours} hours of discovery.",
+        (
+            "Theft of insured property is covered up to the policy limit, "
+            "provided a police report is filed within {hours} hours of discovery."
+        ),
     ),
     (
         "fire",
         "Fire and Smoke Damage",
-        "Direct physical loss caused by fire or smoke is covered, including damage to the structure and "
-        "contents, up to a dwelling coverage limit of ${amount}.",
+        (
+            "Direct physical loss caused by fire or smoke is covered, including "
+            "damage to the structure and contents, up to a dwelling coverage "
+            "limit of ${amount}."
+        ),
     ),
     (
         "liability",
         "Personal Liability",
-        "The policy covers bodily injury or property damage liability arising from the insured premises, "
-        "up to ${amount} per occurrence.",
+        (
+            "The policy covers bodily injury or property damage liability arising "
+            "from the insured premises, up to ${amount} per occurrence."
+        ),
     ),
     (
         "windstorm",
         "Windstorm and Hail",
-        "Damage from windstorm or hail is covered, subject to a separate deductible of ${deductible} "
-        "specified in the declarations page.",
+        (
+            "Damage from windstorm or hail is covered, subject to a separate "
+            "deductible of ${deductible} specified in the declarations page."
+        ),
     ),
     (
         "deductible",
         "Standard Deductible",
-        "A standard deductible of ${deductible} applies to all covered losses unless a higher deductible is "
-        "selected at binding.",
+        (
+            "A standard deductible of ${deductible} applies to all covered losses "
+            "unless a higher deductible is selected at binding."
+        ),
     ),
     (
         "temp_housing",
         "Additional Living Expenses",
-        "If the insured dwelling is uninhabitable due to a covered loss, reasonable additional living "
-        "expenses are covered for up to {months} months.",
+        (
+            "If the insured dwelling is uninhabitable due to a covered loss, "
+            "reasonable additional living expenses are covered for up to "
+            "{months} months."
+        ),
     ),
     (
         "mold",
         "Mold Exclusion",
-        "Damage caused by mold, fungus, or wet rot is excluded unless it results directly from a covered "
-        "water damage event within the first {days} days.",
+        (
+            "Damage caused by mold, fungus, or wet rot is excluded unless it "
+            "results directly from a covered water damage event within the first "
+            "{days} days."
+        ),
     ),
     (
         "jewelry_limit",
         "Scheduled Personal Property Limit",
-        "Jewelry, watches, and furs are covered up to ${limit} in aggregate unless individually scheduled "
-        "on the policy with an appraisal.",
+        (
+            "Jewelry, watches, and furs are covered up to ${limit} in aggregate "
+            "unless individually scheduled on the policy with an appraisal."
+        ),
     ),
     (
         "earthquake",
         "Earthquake Exclusion",
-        "Damage caused by earthquake or earth movement is excluded from this policy up to a maximum of "
-        "${amount} and requires a separate Earthquake Endorsement.",
+        (
+            "Damage caused by earthquake or earth movement is excluded from this "
+            "policy up to a maximum of ${amount} and requires a separate "
+            "Earthquake Endorsement."
+        ),
     ),
 ]
 
@@ -135,13 +160,24 @@ def gen_claim(rng, claim_id: str, policies: list[dict]) -> dict:
         second_clause = rng.choice(others)
 
     scenario_templates = {
-        "water_damage": "A pipe burst in the kitchen and water seeped into the flooring over several weeks.",
-        "theft": "The policyholder's laptop and TV were stolen during a break-in; a police report was filed the next day.",
+        "water_damage": (
+            "A pipe burst in the kitchen and water seeped into the flooring over several weeks."
+        ),
+        "theft": (
+            "The policyholder's laptop and TV were stolen during a break-in; "
+            "a police report was filed the next day."
+        ),
         "fire": "A kitchen fire damaged the ceiling and destroyed several appliances.",
-        "liability": "A visitor slipped on the front steps and is seeking medical cost reimbursement.",
+        "liability": (
+            "A visitor slipped on the front steps and is seeking medical cost reimbursement."
+        ),
         "windstorm": "A hailstorm damaged the roof shingles and gutters.",
-        "deductible": "The policyholder is asking how much they owe out of pocket before coverage kicks in.",
-        "temp_housing": "The house is uninhabitable after a covered fire and the family needs a hotel.",
+        "deductible": (
+            "The policyholder is asking how much they owe out of pocket before coverage kicks in."
+        ),
+        "temp_housing": (
+            "The house is uninhabitable after a covered fire and the family needs a hotel."
+        ),
         "mold": "Mold was found in the bathroom wall two months after a leak was fixed.",
         "jewelry_limit": "A diamond ring worth $8,000 was lost while traveling.",
         "earthquake": "A minor earthquake cracked the foundation of the house.",
@@ -180,9 +216,8 @@ def main() -> None:
     claims = [gen_claim(rng, f"CLAIM-{i:03d}", policies) for i in range(args.claims)]
     (out_dir / "claims.json").write_text(json.dumps(claims, indent=2))
 
-    print(
-        f"wrote {len(policies)} policies ({sum(len(p['clauses']) for p in policies)} clauses total) to {out_dir}/policies/"
-    )
+    n_clauses = sum(len(p["clauses"]) for p in policies)
+    print(f"wrote {len(policies)} policies ({n_clauses} clauses total) to {out_dir}/policies/")
     print(f"wrote {len(claims)} claims (golden labels included) to {out_dir}/claims.json")
 
 

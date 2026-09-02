@@ -117,7 +117,9 @@ def test_full_pipeline_quality():
         env=env,
     )
     assert reindex2.returncode == 0, reindex2.stderr
-    reindex2_line = next(l for l in reindex2.stdout.splitlines() if l.startswith("reindex: "))
+    reindex2_line = next(
+        line for line in reindex2.stdout.splitlines() if line.startswith("reindex: ")
+    )
     import ast
 
     reindex2_stats = ast.literal_eval(reindex2_line[len("reindex: ") :])
@@ -136,7 +138,9 @@ def test_full_pipeline_quality():
         "citations_reference_real_clause_ids",
         measured=1.0,
         threshold=1.0,
-        detail="citations come directly from RRF-fused retrieval results, never fabricated by the LLM",
+        detail=(
+            "citations come directly from RRF-fused retrieval results, never fabricated by the LLM"
+        ),
     )
     report.check(
         Dimension.VALIDITY,
@@ -151,14 +155,20 @@ def test_full_pipeline_quality():
         measured=reindex2_stats.get("policies_reembedded", -1),
         threshold=0,
         higher_is_better=False,
-        detail=f"second reindex run on unchanged docs re-embedded {reindex2_stats.get('policies_reembedded')} (must be 0)",
+        detail=(
+            "second reindex run on unchanged docs re-embedded "
+            f"{reindex2_stats.get('policies_reembedded')} (must be 0)"
+        ),
     )
     report.check(
         Dimension.TIMELINESS,
         "loop_terminates_within_max_iterations",
         measured=1.0,
         threshold=1.0,
-        detail="every claim reached a terminal status without hanging (enforced by MAX_ITERATIONS + SF budget gate)",
+        detail=(
+            "every claim reached a terminal status without hanging "
+            "(enforced by MAX_ITERATIONS + SF budget gate)"
+        ),
     )
 
     report.to_json(str(REPO_ROOT / "benchmarks" / "quality-report.json"))

@@ -5,6 +5,7 @@ the full loop against real MiniStack (DynamoDB, SQS, Step Functions), so
 they belong in integration/. The pure-logic RRF-fusion tests moved to
 tests/unit/test_rrf_fusion.py.
 """
+
 import sys
 import uuid
 from pathlib import Path
@@ -37,7 +38,9 @@ def test_budget_exhaustion_sends_to_dlq_not_a_fabricated_answer():
     # poll a few times rather than asserting on a single receive.
     found = False
     for _ in range(5):
-        messages = sqs.receive_message(QueueUrl=queue_url, MaxNumberOfMessages=10, WaitTimeSeconds=1).get("Messages", [])
+        messages = sqs.receive_message(
+            QueueUrl=queue_url, MaxNumberOfMessages=10, WaitTimeSeconds=1
+        ).get("Messages", [])
         if any(claim_id in m["Body"] for m in messages):
             found = True
             break
@@ -58,6 +61,10 @@ def test_budget_counter_is_atomic_not_read_modify_write():
 
     claim_id = f"test-atomic-{uuid.uuid4()}"
     with concurrent.futures.ThreadPoolExecutor(max_workers=20) as pool:
-        results = list(pool.map(lambda _: gate_iteration(claim_id, token_budget=100_000), range(20)))
+        results = list(
+            pool.map(lambda _: gate_iteration(claim_id, token_budget=100_000), range(20))
+        )
     max_spent = max(r["tokens_spent"] for r in results)
-    assert max_spent == 20 * 300, f"expected the counter to reach exactly {20*300}, got max={max_spent}"
+    assert (
+        max_spent == 20 * 300
+    ), f"expected the counter to reach exactly {20 * 300}, got max={max_spent}"
