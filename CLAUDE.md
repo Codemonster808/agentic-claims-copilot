@@ -66,6 +66,17 @@ make inspect               # scripts/aws_inspect.py all — dump MiniStack state
 Run `pytest features/` (or let `make test` pick it up) for the BDD scenarios in
 `features/*.feature` — see §6.
 
+Dependencies: `requirements.in` (direct runtime deps) and `requirements-dev.in`
+(lint/type/security tooling, constrained against `requirements.txt` so the two
+never disagree) are the source of truth — never hand-edit `requirements.txt`
+or `requirements-dev.txt`, they're generated:
+```bash
+.venv/bin/pip-compile requirements.in --output-file requirements.txt
+.venv/bin/pip-compile requirements-dev.in --output-file requirements-dev.txt
+```
+This is also what makes Dependabot's pip PRs resolvable instead of hand-editing
+one pinned line into a conflict with another.
+
 ## 3. Naming conventions
 
 **S3 buckets:** `claims-docs` (uploaded policy docs + `_reindex_manifest.json`),

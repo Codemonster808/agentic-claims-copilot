@@ -13,7 +13,7 @@ Estimated total: ~24 hours across 2-3 weeks of evenings.
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt   # app deps + lint/type/security tooling
 cp ~/.config/de-portfolio/.env .env   # MINIMAX_API_KEY, PINECONE_API_KEY
 ```
 
