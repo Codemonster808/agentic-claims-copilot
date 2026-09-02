@@ -147,6 +147,16 @@ make eval          # LLM_PROVIDER=fake by default (free); export LLM_PROVIDER=mi
 cat docs/eval-agentic.json
 ```
 
+## Testing
+
+```bash
+make test                     # unit + integration + BDD (pytest-bdd), against real MiniStack
+make e2e                      # full pipeline, emits benchmarks/quality-report.json
+.venv/bin/pre-commit run --all-files   # ruff, mypy, whitespace/EOF checks
+```
+
+CI (`.github/workflows/ci.yml`) runs the same suite on every push, plus an isolated `security` job (`pip-audit`, with two chromadb CVEs explicitly suppressed — see the job's own comment for why they don't apply to `PersistentClient` mode) and a coverage gate that fails the build under the threshold on the badge above.
+
 ## Learn by running
 
 See [`docs/RUNBOOK.md`](docs/RUNBOOK.md). Build from scratch: [`docs/BUILD_GUIDE.md`](docs/BUILD_GUIDE.md).
@@ -158,3 +168,11 @@ Not "chat with your PDF." Without the loop, the budget, the eval harness, and th
 ## Build it yourself
 
 See [`docs/RUNBOOK.md`](docs/RUNBOOK.md) to run the flow, or [`docs/BUILD_GUIDE.md`](docs/BUILD_GUIDE.md) to build from scratch.
+
+## Contributing
+
+Solo-maintained portfolio/demo repo — not actively seeking external contributions, but issues and questions are welcome via [GitHub Issues](https://github.com/Codemonster808/agentic-claims-copilot/issues). See [`CODEOWNERS`](CODEOWNERS) and [`SECURITY.md`](SECURITY.md) for how reports are handled.
+
+## License
+
+[MIT](LICENSE) © Codemonster808
