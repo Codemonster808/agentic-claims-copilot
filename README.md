@@ -22,16 +22,20 @@ An agentic retrieval loop for insurance/fintech claims — plan, retrieve, obser
 
 ```
 synthetic policy docs + claim intake → S3
-  → Lambda: chunk + embed (sentence-transformers) → Pinecone (flag: Chroma local)
-  → Step Functions state machine:
-       Plan    (Lambda: propose retrieval query from claim)
-       Tool    (Lambda: query vector store, top-k)
-       Observe (Lambda: score evidence sufficiency + token spend)
+  → src/ingestion/index_docs.py: chunk + embed (sentence-transformers) → Pinecone (flag: Chroma local)
+  → src/orchestration/statemachine.py drives the loop, calling into
+    src/models/agent_loop.py (Plan / Tool / Observe stay in Python —
+    embedding models don't fit a bare Lambda runtime) between real
+    Step Functions gate calls:
+       Plan    (propose retrieval query from claim)
+       Tool    (query vector store, top-k)
+       Observe (score evidence sufficiency)
+       Gate    (Lambda: src/orchestration/lambdas/check_budget.py — atomic token-spend check)
        Choice  → sufficient? emit answer+citations : retry (until budget)
-       budget exhausted → SQS DLQ
+       budget exhausted → Lambda: src/orchestration/lambdas/send_to_dlq.py → SQS DLQ
   → answers + traces → DynamoDB
-  → nightly PySpark: re-embed changed docs, archive traces → S3 Parquet
-  → FastAPI: /ask, /trace/{id}, /eval/report
+  → nightly src/transformation/reindex.py (PySpark): re-embed changed docs, archive traces → S3 Parquet
+  → src/serving/api.py :: FastAPI: /ask, /trace/{id}, /eval/report
 ```
 
 See `docs/architecture.md` for the diagram.
