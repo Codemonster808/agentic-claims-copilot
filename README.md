@@ -129,7 +129,16 @@ Both precision numbers are modest in absolute terms (0.13–0.17, not 0.8+). Tha
 3. **A loop that doesn't diverge** — backoff, repeated-query detection, a hard cutoff. An agent that retries indefinitely is a cost bug, not a feature.
 4. **Permanent vs. transient failure classification on the LLM call itself** — not every failure deserves a retry. A malformed/rejected request (`PermanentLLMError`) goes straight to the DLQ; a timeout-shaped error (`TransientLLMError`) gets bounded retries with exponential backoff first. `LLM_PROVIDER=fake-flaky` simulates both deterministically — see `docs/RUNBOOK.md`.
 
-## Demo (3 minutes)
+## Installation
+
+```bash
+git clone https://github.com/Codemonster808/agentic-claims-copilot.git
+cd agentic-claims-copilot
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements-dev.txt   # app deps + lint/type/security tooling
+```
+
+## Usage — Demo (3 minutes)
 
 ```bash
 source env.sh
